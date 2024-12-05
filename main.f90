@@ -5,11 +5,19 @@ program main
     real(real64), allocatable :: A(:,:), b(:,:), x(:)
     integer :: i, j
     
+    ! Definicion del sistema de ecuaciones
     A = reshape(real([5,7,3,2,5,12,18,4,3], real64), [3,3], order=[2,1])
     b = reshape(real([8,9,2], real64), [3,1])
-    call QR(A,b)
 
+    ! Resolucion del sistema Ax=b
+    call QR(A,b)
     call solSist(A,b,x)
+
+    ! Impresion de la solucion
+    print *, "La solucion del sistema es:"
+    do i=1,size(x)
+        print *, "x", i, " = ", x(i)
+    end do
 
     contains
         subroutine QR(A, b)
@@ -18,26 +26,25 @@ program main
             ! b: vector (columna, i.e matriz nx1) de términos independientes
             real(real64) :: A(:,:), b(:,:), Hamp(size(A,1),size(A,2))
             real(real64), allocatable :: v(:), H(:,:)
-            integer :: k
+            integer :: k, n
 
             if (size(A,1) /= size(A,2) .or. size(A,1) /= size(b,1) .or. size(b,2) /= 1) then
                 ERROR STOP "El sistema no está bien planteado ya que las dimensiones de los coeficientes no coinciden"
             end if
 
-            do k = 1, size(A,2)-1
+            n = size(A,1)
+            do k = 1, n-1
                 ! Calcula el vector vk = ak - ||ak||e1
                 v = A(k:,k)
                 v(1) = v(1) - norm2(v)
                 
-
                 ! Calcula la matriz de Householder (ampliada) Hamp
                 H = -2/dot_product(v, v)*matmul(reshape(v, [size(v), 1]), reshape(v, [1, size(v)]))
-                do i=1,size(H,1)
+                do i=1,n
                     H(i,i) = 1 + H(i,i)
                 end do
-                call HouseholderAmpliada(H, size(A,1), Hamp)
+                call HouseholderAmpliada(H, n, Hamp)
                 
-
                 ! Actualiza las matrices A y b
                 A = matmul(Hamp, A)
                 b = matmul(Hamp, b)
@@ -47,6 +54,10 @@ program main
         end subroutine QR
 
         subroutine HouseholderAmpliada(H, n, Hamp)
+            ! Dada una matriz de Householder H, devuelve la matriz de Householder ampliada de tamaño nxn Hamp
+            ! H: matriz de Householder
+            ! n: tamaño de la matriz ampliada
+            ! Hamp: matriz de Householder ampliada
             real(real64), intent(in), allocatable :: H(:,:)
             integer, intent(in) :: n
             real(real64), intent(out) :: Hamp(:,:)
@@ -74,7 +85,8 @@ program main
             ! A: matriz de coeficientes
             ! b: vector (columna, i.e matriz nx1) de términos independientes
             ! x: vector solucion
-            real(real64), allocatable :: A(:,:), b(:,:), x(:)
+            real(real64), intent(in) :: A(:,:), b(:,:)
+            real(real64), intent(out), allocatable :: x(:)
             real(real64) :: aux
             integer :: i, j, n
 
@@ -83,17 +95,14 @@ program main
             end if
 
             n = size(A,1)
-            print *, "X:"
             allocate(x(n))
             x(n) = b(n,1)/A(n,n)
-            print *, n, x(n)
             do i=n-1,1,-1
                 aux = 0
                 do j=i+1,n
                     aux = aux + A(i,j)*x(j)
                 end do
                 x(i) = (b(i,1)-aux)/A(i,i)
-                print *, i, x(i)
             end do
             
         end subroutine solSist
