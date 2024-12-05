@@ -1,13 +1,36 @@
 program main
+    ! Resuelve un sistema de ecuaciones lineales Ax=b usando el método de QR
+    ! Las matrices deben estar definidas en un archivo de texto con el siguiente formato:
+    ! n
+    ! a11 a12 ... a1n
+    ! a21 a22 ... a2n
+    ! ...
+    ! an1 an2 ... ann
+    ! b1
+    ! b2
+    ! ...
+    ! bn
+    ! Para compilar: gfortran main.f90
+    ! Para ejecutar: ./a.out < data.txt
     use iso_Fortran_env, only: real64
     implicit none
 
     real(real64), allocatable :: A(:,:), b(:,:), x(:)
-    integer :: i, j
-    
+    integer :: i, n
+
     ! Definicion del sistema de ecuaciones
-    A = reshape(real([5,7,3,2,5,12,18,4,3], real64), [3,3], order=[2,1])
-    b = reshape(real([8,9,2], real64), [3,1])
+    read*, n
+    allocate(A(n,n), b(n,1), x(n))
+    print *, "Matriz A:"
+    do i = 1, n
+        read*, A(i,:)
+        print*,A(i,:)
+    end do
+    print *, "Vector b:"
+    do i = 1, n
+        read*, b(i,:)
+        print*,b(i,:)
+    end do
 
     ! Resolucion del sistema Ax=b
     call QR(A,b)
@@ -16,7 +39,7 @@ program main
     ! Impresion de la solucion
     print *, "La solucion del sistema es:"
     do i=1,size(x)
-        print *, "x", i, " = ", x(i)
+        print *, x(i)
     end do
 
     contains
@@ -33,7 +56,11 @@ program main
             end if
 
             n = size(A,1)
+
             do k = 1, n-1
+                if (esVectTriang(A, k)) then
+                    cycle
+                end if
                 ! Calcula el vector vk = ak - ||ak||e1
                 v = A(k:,k)
                 v(1) = v(1) - norm2(v)
@@ -86,7 +113,7 @@ program main
             ! b: vector (columna, i.e matriz nx1) de términos independientes
             ! x: vector solucion
             real(real64), intent(in) :: A(:,:), b(:,:)
-            real(real64), intent(out), allocatable :: x(:)
+            real(real64), intent(out) :: x(:)
             real(real64) :: aux
             integer :: i, j, n
 
@@ -95,7 +122,6 @@ program main
             end if
 
             n = size(A,1)
-            allocate(x(n))
             x(n) = b(n,1)/A(n,n)
             do i=n-1,1,-1
                 aux = 0
@@ -106,5 +132,20 @@ program main
             end do
             
         end subroutine solSist
+
+        logical function esVectTriang(matriz, k)
+            ! Devuelve true si la fila k de la matriz tiene todo 0s a partir de la fila k+1
+            real(real64), intent(in) :: matriz(:,:)
+            integer, intent(in) :: k
+            integer :: i
+
+            esVectTriang = .true.
+            do i = k+1, size(matriz,1)
+                if (abs(matriz(i, k)) > 1E-20) then
+                    esVectTriang = .false.
+                    return
+                end if
+            end do
+        end function esVectTriang
 
 end program main
