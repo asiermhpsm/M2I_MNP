@@ -11,7 +11,7 @@ program main
     ! ...
     ! bn
     ! Para compilar: gfortran main.f90
-    ! Para ejecutar: ./a.out < data.txt
+    ! Para ejecutar: .\a < matriz_flexibilidad.dat
     use iso_Fortran_env, only: real64
     implicit none
 
