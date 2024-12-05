@@ -5,13 +5,11 @@ program main
     real(real64), allocatable :: A(:,:), b(:,:), x(:)
     integer :: i, j
     
-    A = reshape(real([1,2,3,4,5,6,7,8,9], real64), [3,3], order=[2,1])
-    b = reshape(real([10,11,12], real64), [3,1])
+    A = reshape(real([5,7,3,2,5,12,18,4,3], real64), [3,3], order=[2,1])
+    b = reshape(real([8,9,2], real64), [3,1])
     call QR(A,b)
 
     call solSist(A,b,x)
-
-    call compruebaSol(reshape(real([1,2,3,4], real64), [2,2], order=[2,1]), x, reshape(real([5,6], real64), [2,1]))
 
     contains
         subroutine QR(A, b)
@@ -30,6 +28,7 @@ program main
                 ! Calcula el vector vk = ak - ||ak||e1
                 v = A(k:,k)
                 v(1) = v(1) - norm2(v)
+                
 
                 ! Calcula la matriz de Householder (ampliada) Hamp
                 H = -2/dot_product(v, v)*matmul(reshape(v, [size(v), 1]), reshape(v, [1, size(v)]))
@@ -98,18 +97,5 @@ program main
             end do
             
         end subroutine solSist
-
-        subroutine compruebaSol(A, x, b)
-            real(real64) :: A(:,:), b(:,:), x(:)
-            real(real64), allocatable :: aux(:,:)
-            aux = matmul(A,reshape(x, [2,1])) - b
-            print *, "A*x-b:"
-            do i=1, size(aux,1)
-                do j=1, size(aux,2)
-                    print *, i, j, aux(i,j)
-                end do
-            end do
-            
-        end subroutine compruebaSol
 
 end program main
